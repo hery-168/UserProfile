@@ -148,7 +148,7 @@ comm['REQ_FINISH_DATE'] = comm.REQ_FINISH_DATE.apply(lambda x : pd.to_datetime(x
 comm = comm.loc[~(comm.REQ_BEGIN_DATE > comm.REQ_FINISH_DATE)]
 df = df.loc[df.CUST_NO.isin(comm.CUST_NO)].copy()
 comm['holding_time'] = comm['REQ_FINISH_DATE'] - comm['REQ_BEGIN_DATE']
-
+comm['holding_time_seconds'] = comm.holding_time.apply(lambda x:x.seconds)
 
 
 
