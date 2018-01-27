@@ -63,9 +63,9 @@ with codecs.open(data_path_train + file_jobInfo_train, 'r', encoding='utf-8') as
          for i, item in enumerate(items):
              item = item.strip()
              if i < 12:
-                 fout.write(item, '\t')
+                 fout.write(item + '\t')
              else:
-                 fout.write(item, '\n')
+                 fout.write(item + '\n')
      print('() lines in train_95598'.format(index))
 
 with codecs.open(data_path_test + file_jobInfo_test, 'r', encoding='utf-8') as fin,\
@@ -73,11 +73,11 @@ with codecs.open(data_path_test + file_jobInfo_test, 'r', encoding='utf-8') as f
     for index, line in enumerate(fin):
         items = line.strip().split('\t')
         for i, item in enumerate(items):
-            item = item.stip()
+            item = item.strip()
             if i < 12:
-                fout.write(item, '\t')
+                fout.write(item + '\t')
             else:
-                fout.write(item, '\n')
+                fout.write(item + '\n')
     print('() lines in test_95598'.format(index))
 
 # 处理训练数据
@@ -110,7 +110,7 @@ del temp, train, test
 # 只保留一条工单信息的低敏感度用户
 ############
 df = df.loc[df.counts_of_jobinfo == 1].copy()
-df.reset_index(drop=True, inplace=1)
+df.reset_index(drop=True, inplace=True)
 train = df.loc[df.label != 1]
 test = df.loc[df.label == -1]
 print('原始数据中的低敏感度用户分布情况如下：')
@@ -119,7 +119,40 @@ print('正样本:', train.loc[train.label == 1].shape[0])
 print('负样本:', train.loc[train.label == 0].shape[0])
 print('---------------')
 print('测试集:', test.shape[0])
-df.drop(['counts_of_jobinfo'], axis=1, inplace=1)
+df.drop(['counts_of_jobinfo'], axis=1, inplace=True)
+
+
+#   --------- 构建特征 -------
+# 读取表2   客户通话信息记录
+# 没有表2信息的用户全是非敏感用户
+print('Creating Features...')
+# 合并工单
+jobinfo = train_info.append(test_info).copy()
+jobinfo = jobinfo.loc[jobinfo.CUST_NO.isin(df.CUST_NO)].copy()
+jobinfo.reset_index(drop=True, inplace=True)
+ #python的merge函数具体参见博客: http://blog.csdn.net/ly_ysys629/article/details/73849543
+jobinfo = jobinfo.merge(df[['CUST_NO', 'label']], on='CUST_NO', how='left')
+
+#  ######
+print('处理表2...')
+comm = pd.read_csv(data_path_train + file_comm, sep='\t')
+comm.drop_duplicates(inplace=True)   # 去重 inplace=True 是直接对原dataFrame进行操作。
+                                     #     inplace=False 不改变原来的dataFrame，而将结果生成在一个新的dataFrame中。
+comm = comm.loc[comm.APP_NO.isin(jobinfo.ID)]
+comm = comm.rename(columns={'APP_NO':'ID'})
+comm = comm.merge(jobinfo[['ID', 'CUST_NO']], on='ID', how='left')
+comm['REQ_BEGIN_DATE'] = comm.REQ_BEGIN_DATE.apply(lambda x : pd.to_datetime(x))
+comm['REQ_FINISH_DATE'] = comm.REQ_FINISH_DATE.apply(lambda x : pd.to_datetime(x))
+
+# 过滤
+comm = comm.loc[~(comm.REQ_BEGIN_DATE > comm.REQ_FINISH_DATE)]
+df = df.loc[df.CUST_NO.isin(comm.CUST_NO)].copy()
+comm['holding_time'] = comm['REQ_FINISH_DATE'] - comm['REQ_BEGIN_DATE']
+
+
+
+
+
 
 
 
