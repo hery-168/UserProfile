@@ -157,7 +157,7 @@ df = df.merge(comm[['CUST_NO', 'holding_time_seconds']], how='left', on='CUST_NO
 # transform函数可以替换fit_transform(). fit_transform()不能替换transform()
 # fit_transform()先拟合数据，再标准化
 # transform()通过找中心和缩放等实现标准化
-df['hoding_time_seconds'] = MinMaxScaler().fit_transform(df['holding_time_seconds']) # 要带一个参数
+df['holding_time_seconds'] = MinMaxScaler().fit_transform(df['holding_time_seconds']) # 要带一个参数
 del comm
 
 print('处理表1...')
@@ -334,7 +334,7 @@ for word in mywords:
     jieba.add_word(word)  # 可在程序中动态修改词典
 
 stops = set()
-stopwords = 'E:\py_workspace\UserProfile\stopwords.txt'
+stopwords = 'E:\py_workspace\\UserProfile\stopwords.txt'
 with open(stopwords, encoding='utf-8') as f:
     for word in f:
         word = word.strip()
