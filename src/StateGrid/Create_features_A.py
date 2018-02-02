@@ -372,7 +372,7 @@ def hash_numbers(x):
         x = re.sub(tingdian_pattern, ' 停电number ', x)
 
     return x.strip()
-jobinfo['content'] = jobinfo['contents'].apply(lambda x:hash_number(x))
+jobinfo['content'] = jobinfo['contents'].apply(lambda x:hash_numbers(x))
 
 jobinfo['len_of_contents'] = jobinfo.content.apply(lambda x:len(x.split()))
 jobinfo['counts_of_words'] = jobinfo.content.apply(lambda x:len(set(x.split())))
