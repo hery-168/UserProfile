@@ -75,7 +75,7 @@ df = df.loc[df.counts_of_jobinfo != 1].copy()
 # 同时去掉表1记录太多的离群点
 df = df.loc[df.counts_of_jobinfo <= 10].copy()
 
-df.reset_index(drop=True, inplace=1)
+df.reset_index(drop=True, inplace=True)
 train = df.loc[df.label != -1]
 test = df.loc[df.label == -1]
 print('原始数据中的高敏感度用户分布情况如下：')
@@ -137,7 +137,7 @@ topics.columns = ['topic', 'counts']
 topics['topic_ratio'] = topics.topic.map(ratio)
 topics = topics.loc[(topics.counts > 4) & (~topics.topic_ratio.isnull())]
 jobinfo = jobinfo.merge(topics[['topic', 'topic_ratio']], on='topic', how='left')
-jobinfo.topic_ratio.fillna(topics.topic_ratio.median(), inplace=1)
+jobinfo.topic_ratio.fillna(topics.topic_ratio.median(), inplace=True)
 
 df['sum_topic_ratio'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').topic_ratio.sum())
 df['mean_topic_ratio'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').topic_ratio.mean())
@@ -151,7 +151,7 @@ print('处理表2...')
 # 2. 6个训练集的用户，REQ_BEGIN_DATE > REQ_FINISH_DATE . 异常数据，剔除掉
 
 comm = pd.read_csv(data_path_train + file_comm, sep='\t')
-comm.drop_duplicates(inplace=1)
+comm.drop_duplicates(inplace=True)
 comm = comm.loc[comm.APP_NO.isin(jobinfo.ID)]
 comm = comm.rename(columns={'APP_NO': 'ID'})
 comm = comm.merge(jobinfo[['ID', 'CUST_NO']], on='ID', how='left')
@@ -186,7 +186,7 @@ del comm
 # ************************************************************************************************************
 print('处理表1...')
 jobinfo = jobinfo.loc[jobinfo.CUST_NO.isin(df.CUST_NO)].copy()
-jobinfo.reset_index(drop=True, inplace=1)
+jobinfo.reset_index(drop=True, inplace=True)
 ################
 # CUST_NO
 ################
@@ -198,12 +198,12 @@ df['rank_CUST_NO'] = MinMaxScaler().fit_transform(df.rank_CUST_NO)
 ################
 df['nunique_BUSI_TYPE'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').BUSI_TYPE_CODE.nunique())
 df['counts_divide_busi'] = df['counts_of_jobinfo'] / df['nunique_BUSI_TYPE']
-df.drop(['nunique_BUSI_TYPE'], axis=1, inplace=1)
+df.drop(['nunique_BUSI_TYPE'], axis=1, inplace=True)
 # count
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.BUSI_TYPE_CODE, prefix='count_BUSI_TYPE_CODE')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.BUSI_TYPE_CODE.unique():
@@ -211,14 +211,14 @@ for i in jobinfo.BUSI_TYPE_CODE.unique():
 ################
 # URBAN_RURAL_FLAG
 ################
-jobinfo['URBAN_RURAL_FLAG'].fillna(-1, inplace=1)
+jobinfo['URBAN_RURAL_FLAG'].fillna(-1, inplace=True)
 df['nunique_URBAN'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').URBAN_RURAL_FLAG.nunique())
 df['ratio_urban'] = df['counts_of_jobinfo'] / df['nunique_URBAN']
 # count
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.URBAN_RURAL_FLAG, prefix='count_URBAN_RURAL_FLAG')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.URBAN_RURAL_FLAG.unique():
@@ -233,7 +233,7 @@ df['counts_divide_nunique_ORG_NO'] = df['counts_of_jobinfo'] / df['nunique_ORG_N
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.ORG_NO, prefix='count_ORG_NO')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.ORG_NO.unique():
@@ -247,7 +247,7 @@ df['nunique_len_of_ORG_NO'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').len_of_O
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.len_of_ORG_NO, prefix='count_len_of_ORG_NO')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.len_of_ORG_NO.unique():
@@ -255,14 +255,14 @@ for i in jobinfo.len_of_ORG_NO.unique():
 ###############
 # ELEC_TYPE
 ###############
-jobinfo['ELEC_TYPE'].fillna(0, inplace=1)
+jobinfo['ELEC_TYPE'].fillna(0, inplace=True)
 df['nunique_ELEC_TYPE'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').ELEC_TYPE.nunique())
 df['ratio_ELEC_TYPE'] = df['counts_of_jobinfo'] / df['nunique_ELEC_TYPE']
 # count
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.ELEC_TYPE, prefix='count_ELEC_TYPE')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.ELEC_TYPE.unique():
@@ -277,7 +277,7 @@ df['ratio_head_of_ELEC_TYPE'] = df['counts_of_jobinfo'] / df['nunique_head_of_EL
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.head_of_ELEC_TYPE, prefix='count_head_of_ELEC_TYPE')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.head_of_ELEC_TYPE.unique():
@@ -292,7 +292,7 @@ jobinfo['month'] = jobinfo.date.apply(lambda x: x.month)
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.month, prefix='count_month')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.month.unique():
@@ -303,7 +303,7 @@ df['nunique_date'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').date.nunique())
 df['dates'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').date.apply(lambda x: [i for i in sorted(x)]))
 df['how_many_days_interval'] = df.dates.apply(lambda x: x[-1] - x[0])
 df['how_many_days_interval'] = df.how_many_days_interval.apply(lambda x: x.days)
-df.drop(['dates'], axis=1, inplace=1)
+df.drop(['dates'], axis=1, inplace=True)
 # 4.平均几天打一个电话
 df['how_many_days_one_call'] = df['how_many_days_interval'] / df['counts_of_jobinfo']
 # 5.平均一天打几个电话
@@ -329,26 +329,26 @@ df['max_gap'] = df.gaps.apply(lambda x: max(x))
 df['mean_gap'] = df.gaps.apply(lambda x: np.mean(x))
 df['std_gap'] = df.gaps.apply(lambda x: np.std(x))
 df['median_gap'] = df.gaps.apply(lambda x: np.median(x))
-df.drop(['times', 'gaps'], axis=1, inplace=1)
+df.drop(['times', 'gaps'], axis=1, inplace=True)
 # 8. 一个月中的哪一天
 jobinfo['day'] = jobinfo.date.apply(lambda x: x.day)
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.day, prefix='day')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # 9. 小时
 jobinfo['hour'] = jobinfo.time.apply(lambda x: x.hour)
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.hour, prefix='hour')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # 10. 最多一个月打了几个电话
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.month, prefix='month')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 temp = pd.concat([temp, temp.drop(['CUST_NO'], axis=1).max(axis=1).to_frame(name='most_times_jobinfo_in_one_month')],
                  axis=1)
 df = df.merge(temp[['CUST_NO', 'most_times_jobinfo_in_one_month']], on='CUST_NO', how='left')
@@ -366,7 +366,7 @@ df['ratio_CITY_ORG_NO'] = df['counts_of_jobinfo'] / df['nunique_CITY_ORG_NO']
 temp = jobinfo[['CUST_NO']]
 temp = pd.concat([temp, pd.get_dummies(jobinfo.CITY_ORG_NO, prefix='count_CITY_ORG_NO')], axis=1)
 temp = temp.groupby('CUST_NO').sum()
-temp.reset_index(inplace=1)
+temp.reset_index(inplace=True)
 df = df.merge(temp, on='CUST_NO', how='left')
 # ratio
 for i in jobinfo.CITY_ORG_NO.unique():
@@ -389,7 +389,7 @@ topics['multi_topic_ratio'] = topics.topic.map(ratio)
 topics = topics.loc[(topics.counts > 4) & (~topics.multi_topic_ratio.isnull())]
 
 jobinfo = jobinfo.merge(topics[['topic', 'multi_topic_ratio']], on='topic', how='left')
-jobinfo.multi_topic_ratio.fillna(topics.multi_topic_ratio.median(), inplace=1)
+jobinfo.multi_topic_ratio.fillna(topics.multi_topic_ratio.median(), inplace=True)
 
 df['sum_multi_topic_ratio'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').multi_topic_ratio.sum())
 df['mean_multi_topic_ratio'] = df.CUST_NO.map(jobinfo.groupby('CUST_NO').multi_topic_ratio.mean())
@@ -402,8 +402,8 @@ print('处理表9...')
 train_flow = pd.read_csv(data_path_train + file_flow_train, sep='\t')
 test_flow = pd.read_csv(data_path_test + file_flow_test, sep='\t')
 flow = train_flow.append(test_flow).copy()
-flow.rename(columns={'CONS_NO': 'CUST_NO'}, inplace=1)
-flow.drop_duplicates(inplace=1)
+flow.rename(columns={'CONS_NO': 'CUST_NO'}, inplace=True)
+flow.drop_duplicates(inplace=True)
 flow = flow.loc[flow.CUST_NO.isin(df.CUST_NO)].copy()
 
 flow['T_PQ'] = flow.T_PQ.apply(lambda x: -x if x < 0 else x)
@@ -540,7 +540,7 @@ text['mean_len_of_content'] = text.sum_len_of_content / text.counts_of_jobinfo
 text['sum_counts_of_words'] = text.contents.apply(lambda x: len(set(x.split())))
 text['mean_counts_of_words'] = text.sum_counts_of_words / text.counts_of_jobinfo
 
-text.drop(['counts_of_jobinfo'], axis=1, inplace=1)
+text.drop(['counts_of_jobinfo'], axis=1, inplace=True)
 
 pickle.dump(text, open('../myfeatures/text_features_2.pkl', 'wb'))
 print('done!')
